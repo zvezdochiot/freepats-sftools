@@ -2,8 +2,9 @@
 #include <math.h>
 #include <string.h>
 #include <unistd.h>
-#include <riffraff/bits.h>
-#include <riffraff/rifftypes.h>
+#include "riffraff/bits.h"
+#include "riffraff/rifftypes.h"
+#include "trap.h"
 
 double fpart(double x)
 {

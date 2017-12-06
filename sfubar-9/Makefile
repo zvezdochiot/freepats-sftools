@@ -17,6 +17,7 @@ PT=		parsetxt-4
 RR=		riffraff-7
 SF=		sfubar-9
 OBJS=		trap.o sfutil.o aifutil.o wavutil.o
+LIB = libfreepatssfubar.so.0
 
 CC=		$(TOOLDIR)gcc
 AR=		$(TOOLDIR)ar
@@ -24,11 +25,12 @@ RANLIB=		$(TOOLDIR)ranlib
 STRIP=		$(TOOLDIR)strip
 
 CFLAGS+=	-Wall -I$(PREFIX)/include
-LDLIBS+=	-L$(PREFIX)/lib -l$(SF) -lm
+LDLIBS+=	-lm
 
-all:	sfubar gensine
+all:	$(LIB) freepats-sfubar freepats-gensine
 
 $(PREFIX)/lib/lib$(SF).a: install-includes $(PREFIX)/lib/lib$(RR).a $(OBJS)
+	mkdir tmp ; \
 	cp ${PREFIX}/lib/lib${PT}.a ${PREFIX}/lib/lib${RR}.a ${OBJS} tmp/ ; \
 	cd tmp ; \
 	${AR} -x lib${PT}.a ; \
@@ -43,11 +45,23 @@ install-includes:
 	cp trap.h ${SRCDIR}/lib${RR}/include
 	cp trap.h ${PREFIX}/include
 
-sfubar:	$(PREFIX)/lib/lib$(SF).a main.o
-	${CC} ${CFLAGS} -o $@ main.o ${LDLIBS}
+$(LIB):	$(PREFIX)/lib/lib$(SF).a
+	mkdir tmp ; \
+	cp ${PREFIX}/lib/lib${PT}.a ${PREFIX}/lib/lib${RR}.a ${PREFIX}/lib/lib${SF}.a tmp/ ; \
+	cd tmp ; \
+	${AR} -x lib${SF}.a ; \
+	${AR} -x lib${PT}.a ; \
+	${AR} -x lib${RR}.a ; \
+	${CC} -shared ${CFLAGS} -o $@ *.o -s ; \
+	rm *.[ao] ; \
+	mv $@ ..
 
-gensine:	$(PREFIX)/lib/lib$(SF).a gensine.o
-	${CC} ${CFLAGS} -o $@ gensine.o ${LDLIBS}
+freepats-sfubar:	main.o $(LIB)
+	${CC} ${CFLAGS} -o $@ $(LIB) main.o ${LDLIBS} -s
+
+
+freepats-gensine:	gensine.o trap.o $(LIB)
+	${CC} ${CFLAGS} -o $@ $^ ${LDLIBS} -s
 
 $(PREFIX)/lib/lib$(RR).a:
 	cd ${SRCDIR}/lib${RR} && \
